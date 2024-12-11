@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1A2B 遊戲</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>109202040_HW6</h1>
+    <div class="game-container">
+        <input type="text" id="guessInput" placeholder="輸入4個數字">
+        <button onclick="submitGuess()">猜!</button>
+        <button onclick="revealAnswer()">顯示答案</button>
+        <div id="resultContainer">
+            <h2>結果</h2>
+            <ul id="guessLog"></ul>
+        </div>
+        <p id="attempts">作答次數：0</p>
+    </div>
+
+    <!-- JavaScript 部分 -->
+    <script>
+        let secretNumber = generateSecretNumber();
+        let attempts = 0;
+
+        function generateSecretNumber() {
+            const numbers = Array.from({ length: 10 }, (_, i) => i);
+            const secret = [];
+            while (secret.length < 4) {
+                const randomIndex = Math.floor(Math.random() * numbers.length);
+                secret.push(numbers.splice(randomIndex, 1)[0]);
+            }
+            return secret.join('');
+        }
+
+        function validateInput(input) {
+            if (input.length !== 4) return false;
+            const uniqueDigits = new Set(input);
+            return uniqueDigits.size === 4 && /^\d{4}$/.test(input);
+        }
+
+        function calculateResult(guess) {
+            let A = 0, B = 0;
+            const used = Array(4).fill(false); // 用於記錄 secretNumber 是否已被處理
+
+            // 計算 A（數字和位置都正確）
+            for (let i = 0; i < guess.length; i++) {
+                if (guess[i] === secretNumber[i]) {
+                    A++;
+                    used[i] = true; // 標記該位數已處理
+                }
+            }
+
+            // 計算 B（數字正確但位置不正確）
+            for (let i = 0; i < guess.length; i++) {
+                if (guess[i] !== secretNumber[i] && secretNumber.includes(guess[i])) {
+                    const idx = secretNumber.indexOf(guess[i]);
+                    // 確保該數字存在於 secretNumber 且尚未處理過
+                    if (!used[idx]) {
+                        B++;
+                        used[idx] = true; // 標記該數字已處理
+                    }
+                }
+            }
+
+            return `${A}A${B}B`;
+        }
+
+        function submitGuess() {
+            const guessInput = document.getElementById('guessInput');
+            const guess = guessInput.value;
+
+            if (!validateInput(guess)) {
+                alert('請輸入4個不重複的數字！');
+                guessInput.value = '';
+                return;
+            }
+
+            attempts++;
+            const result = calculateResult(guess);
+
+            const guessLog = document.getElementById('guessLog');
+            const listItem = document.createElement('li');
+            listItem.textContent = `猜測：${guess}，結果：${result}`;
+            guessLog.appendChild(listItem);
+
+            document.getElementById('attempts').textContent = `作答次數：${attempts}`;
+
+            if (result === '4A0B') {
+                alert(`恭喜你答對了！總共作答次數：${attempts}`);
+                resetGame();
+            }
+
+            guessInput.value = '';
+        }
+
+        function revealAnswer() {
+            alert(`謎底是：${secretNumber}`);
+        }
+
+        function resetGame() {
+            secretNumber = generateSecretNumber();
+            attempts = 0;
+            document.getElementById('guessLog').innerHTML = '';
+            document.getElementById('attempts').textContent = '作答次數：0';
+        }
+    </script>
+</body>
+</html>
